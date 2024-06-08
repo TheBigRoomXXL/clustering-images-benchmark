@@ -32,7 +32,7 @@ effigies_ids = [
     "colorhash-32",
     # "colorhash-64",
     # "openai-clip-vit-base-patch16",
-    # "openai-clip-vit-base-patch32",
+    "openai-clip-vit-base-patch32",
 ]
 effigies_ids.sort()
 metric_list = [
