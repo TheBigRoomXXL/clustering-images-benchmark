@@ -7,7 +7,7 @@ from imagehash import average_hash, phash, dhash, colorhash
 
 nb_workers = 3
 input_directory = "data/images/128"
-
+lazy = True
 
 def main():
     directory = Path(input_directory)
@@ -24,7 +24,7 @@ def main():
                 f"processed {i} out of {len(futures)} images ({round(i*100/len(futures))}%)"
             )
 
-    print({len(futures) * 5 * 4}, "hash computed")
+    print({len(futures) * 4 * 4}, "hash computed")
 
 
 def process_img(img_path: Path):
@@ -32,10 +32,12 @@ def process_img(img_path: Path):
         img_id = img_path.stem
         img = Image.open(img_path, formats=("WEBP",))
 
-        for n in (8, 16, 32, 64, 128):
+        for n in (8, 16, 32, 64):
             for hashfunc in (average_hash, phash, dhash, colorhash):
-                file = Path(f"data/effigy/{hashfunc.__name__}-{n}/{img_id}")
-                file.write_bytes(hashfunc(img, n).hash.tobytes())
+                save_file = Path(f"data/effigy/{hashfunc.__name__}-{n:02}/{img_id}")
+                if lazy and save_file.is_file():
+                    continue
+                save_file.write_bytes(hashfunc(img, n).hash.tobytes())
 
     except Exception as e:
         print(f"failed to process {img_path}: {e}")
