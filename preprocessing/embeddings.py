@@ -11,6 +11,7 @@ models_ids = [
     "openai/clip-vit-base-patch32",
     "openai/clip-vit-base-patch16",
 ]
+lazy = True
 
 
 def main():
@@ -24,14 +25,14 @@ def main():
     print(f"Processed {len(imgs_paths) * len(models_ids)} embeddings")
 
 
-def process_img_batch(imgs_paths: Path, model_id: str):
+def process_img_batch(imgs_paths: list[Path], model_id: str):
     try:
         print(f"Starting processig for model {model_id}")
         model = CLIPModel.from_pretrained(model_id)
         processor = AutoProcessor.from_pretrained(model_id)
         for i, img_path in enumerate(imgs_paths):
             process_img(img_path, processor, model)
-            if i % 250 == 0:
+            if i % 500 == 0:
                 print(model_id, round(i * 100 / len(imgs_paths)), "%")
         print(f"Finished processing for  model {model_id}")
     except Exception as e:
@@ -41,13 +42,16 @@ def process_img_batch(imgs_paths: Path, model_id: str):
 def process_img(img_path: Path, processor: AutoProcessor, model: CLIPModel):
     try:
         img_id = img_path.stem
+        save_file = Path(f"data/effigy/{model.name_or_path.replace('/','-')}/{img_id}")
+        if lazy and save_file.is_file():
+            return
+
         img = Image.open(img_path, formats=("WEBP",))
 
         img_inputs = processor(images=img, return_tensors="pt")
         img_embedding = model.get_image_features(**img_inputs)
 
-        file = Path(f"data/embeddings/{model.name_or_path.replace('/','-')}/{img_id}")
-        file.write_bytes(img_embedding.detach().numpy().tobytes())
+        save_file.write_bytes(img_embedding.detach().numpy().tobytes())
 
     except Exception as e:
         print(f"failed to process {img_path}: {e}")

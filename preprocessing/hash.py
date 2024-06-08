@@ -20,9 +20,11 @@ def main():
     for f in as_completed(futures):
         i += 1
         if i % 1000 == 0:
-            print(f"processed {i} out of {len(futures)} images ({round(i*100/len(futures))}%)")
+            print(
+                f"processed {i} out of {len(futures)} images ({round(i*100/len(futures))}%)"
+            )
 
-    print({len(futures) * 5 * 4}, "hash computed" )
+    print({len(futures) * 5 * 4}, "hash computed")
 
 
 def process_img(img_path: Path):
@@ -32,7 +34,7 @@ def process_img(img_path: Path):
 
         for n in (8, 16, 32, 64, 128):
             for hashfunc in (average_hash, phash, dhash, colorhash):
-                file = Path(f"data/{hashfunc.__name__}/{n}/{img_id}")
+                file = Path(f"data/effigy/{hashfunc.__name__}-{n}/{img_id}")
                 file.write_bytes(hashfunc(img, n).hash.tobytes())
 
     except Exception as e:
