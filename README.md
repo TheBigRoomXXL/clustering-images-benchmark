@@ -23,6 +23,10 @@ will greatly improve the performance for large sample.
 I will experiment using the [Flickr Image dataset](https://www.kaggle.com/datasets/hsankesara/flickr-image-dataset?ref=hackernoon.com)
 
 
+## Result
+
+### aHsh, pHash, dHash, colorHash just doesn't seam to work for efficent clustering :-(
+
 ## Running the benchmark
 
 ### 1. Preprocessing the data set
@@ -32,9 +36,15 @@ every images to a 128x128 webp. This will be this images used to calculates the
 hash.
 
 ```bash
-parallel convert {} -define webp:lossless=false -resize 8x8\! -quality 50% "data/images/8/{/.}.webp" ::: data/images/base/*
-
 parallel -j 6 convert {} -define webp:lossless=false -resize 128x128\! -quality 50% "data/images/thumbnail/{/.}.webp" ::: data/images/base/*
 ```
 
-Then I execute hash.py to compute all the hash.
+Then I execute `hash.py` and `embeddingpy` to compute all the hash and embedding.
+
+### 2. Execute the benchmark
+
+```bash
+python benchmark.py
+```
+
+
