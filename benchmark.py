@@ -7,47 +7,46 @@ from time import perf_counter
 import numpy as np
 from numpy.typing import NDArray
 from fastcluster import linkage
-from scipy.cluster.hierarchy import fcluster
+from scipy.cluster.hierarchy import fcluster, maxdists
 
 linkage_dir = Path("data/linkages")
 graph_dir = Path("data/graphs")
 effigies_dir = Path("data/effigy")
-image_dir = Path("data/images/128")
+image_dir = Path("data/images/flowers")
 image_ids = [file.stem for file in image_dir.iterdir()]
 effigies_ids = [
-    "average_hash-08",
-    "average_hash-16",
-    "average_hash-32",
-    # "average_hash-64",
-    "phash-08",
-    "phash-16",
-    "phash-32",
-    # "phash-64",
-    "dhash-08",
-    "dhash-16",
-    "dhash-32",
-    # "dhash-64",
-    "colorhash-08",
-    "colorhash-16",
-    "colorhash-32",
-    # "colorhash-64",
     # "openai-clip-vit-base-patch16",
     "openai-clip-vit-base-patch32",
+    # "average_hash-08",
+    # "average_hash-16",
+    # "average_hash-32",
+    "average_hash-64",
+    # "phash-08",
+    # "phash-16",
+    # "phash-32",
+    "phash-64",
+    # "dhash-08",
+    # "dhash-16",
+    # "dhash-32",
+    "dhash-64",
+    # "colorhash-08",
+    # "colorhash-16",
+    # "colorhash-32",
+    "colorhash-64",
 ]
-effigies_ids.sort()
 metric_list = [
     # "euclidean",
     "cosine",
     "hamming",
 ]
 n_list = [
-    10,
-    100,
-    500,
+    # 10,
+    # 100,
+    # 500,
     1000,
-    2000,
-    5000,
-    10000,
+    # 2000,
+    # 5000,
+    # 10000,
 ]
 
 
@@ -107,8 +106,9 @@ def save_linkage(linkage_id: str, links: NDArray):
 
 def make_graph(links: NDArray):
     factors = [0.5, 0.1, 0.01]
-    max_dist = np.max(links[:, 2])
-    levels = [fcluster(links, f * max_dist, criterion="distance") for f in factors]
+    max_dist = links[-1, 2]
+    print(max_dist)
+    levels = [fcluster(links, f, criterion="distance") for f in factors]
     return [
         (
             str(image_ids[i]),

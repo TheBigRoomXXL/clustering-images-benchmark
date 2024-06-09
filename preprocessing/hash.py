@@ -6,8 +6,9 @@ from imagehash import average_hash, phash, dhash, colorhash
 
 
 nb_workers = 3
-input_directory = "data/images/128"
-lazy = True
+input_directory = "data/images/flowers"
+lazy = False
+
 
 def main():
     directory = Path(input_directory)
@@ -24,13 +25,13 @@ def main():
                 f"processed {i} out of {len(futures)} images ({round(i*100/len(futures))}%)"
             )
 
-    print({len(futures) * 4 * 4}, "hash computed")
+    print(len(futures) * 4 * 4, "hash computed")
 
 
 def process_img(img_path: Path):
     try:
         img_id = img_path.stem
-        img = Image.open(img_path, formats=("WEBP",))
+        img = Image.open(img_path)
 
         for n in (8, 16, 32, 64):
             for hashfunc in (average_hash, phash, dhash, colorhash):

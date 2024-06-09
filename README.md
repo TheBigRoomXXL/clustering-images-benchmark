@@ -34,7 +34,7 @@ hash.
 ```bash
 parallel convert {} -define webp:lossless=false -resize 8x8\! -quality 50% "data/images/8/{/.}.webp" ::: data/images/base/*
 
-parallel -j 6 convert {} -define webp:lossless=false -resize 128x128\! -quality 50% "data/images/128/{/.}.webp" ::: data/images/base/*
+parallel -j 6 convert {} -define webp:lossless=false -resize 128x128\! -quality 50% "data/images/thumbnail/{/.}.webp" ::: data/images/base/*
 ```
 
 Then I execute hash.py to compute all the hash.
