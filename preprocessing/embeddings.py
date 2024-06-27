@@ -1,67 +1,63 @@
 from pathlib import Path
 from time import perf_counter
-import torch
-from transformers import AutoProcessor, CLIPModel, AutoModel
 
+import torch
 from PIL import Image
+from transformers import AutoModel, AutoProcessor
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-models_ids = [
-    "openai/clip-vit-base-patch32",
-    "openai/clip-vit-base-patch16",
-]
-lazy = False
+model_id = "openai/clip-vit-base-patch32"
+
+lazy = True
+
+input_directory = Path("data/images/flowers-clean")
 
 
 def main(directory: Path):
-    imgs = directory.iterdir()
+    imgs = [file for file in directory.iterdir()]
     imgs_paths = [img_path for img_path in imgs]
 
-    for model_id in models_ids:
-        process_img_batch(imgs_paths, model_id)
-
-    print(f"Processed {len(imgs_paths) * len(models_ids)} embeddings")
-
-
-def process_img_batch(imgs_paths: list[Path], model_id: str):
-    print(f"Starting processig for model {model_id}")
+    n = 1000
+    imgs_path_chunks = [imgs_paths[i : i + n] for i in range(0, len(imgs_paths), n)]
 
     model = AutoModel.from_pretrained(model_id)
     processor = AutoProcessor.from_pretrained(model_id)
 
-    for i, img_path in enumerate(imgs_paths):
-        process_img(img_path, processor, model)
-        if i % 500 == 0:
-            print(model_id, f"({i} | {round(i * 100 / len(imgs_paths))}%)")
+    for chunk in imgs_path_chunks:
+        process_img_batch(model, processor, chunk)
 
-    print(f"Finished processing for  model {model_id}")
+    print(f"Processed {len(imgs_paths) } embeddings")
 
 
-def process_img(img_path: Path, processor: AutoProcessor, model: CLIPModel):
-    try:
-        img_id = img_path.stem
-        save_file = Path(f"data/effigy/{model.name_or_path.replace('/','-')}/{img_id}")
-        if lazy and save_file.is_file():
+def process_img_batch(
+    model: AutoModel, processor: AutoProcessor, imgs_paths: list[Path]
+):
+    save_files = [
+        Path(f"data/effigy/{model.name_or_path.replace('/','-')}/{img.stem}")
+        for img in imgs_paths
+    ]
+
+    if lazy:
+        save_files = [f for f in save_files if not f.is_file()]
+        if len(save_files) == 0:
+            print("0 file to process")
             return
 
-        img = Image.open(img_path)
+    imgs = [Image.open(img_path) for img_path in imgs_paths]
+    inputs = processor(images=imgs, return_tensors="pt")
 
-        inputs = processor(images=img, return_tensors="pt")
+    with torch.no_grad():
+        img_embeddings = model.get_image_features(pixel_values=inputs["pixel_values"])
 
-        with torch.no_grad():
-            img_embedding = model.get_image_features(
-                pixel_values=inputs["pixel_values"]
-            )
+    img_embeddings_np = img_embeddings.detach().numpy()
 
-        img_embedding_np = img_embedding.detach().numpy()[0]
+    for save_file, img_embedding_np in zip(save_files, img_embeddings_np):
         save_file.write_bytes(img_embedding_np.tobytes())
 
-    except Exception as e:
-        print(f"failed to process {img_path}: {e}")
+    print(f"processed {len(save_files)} images")
 
 
 if __name__ == "__main__":
-    input_directory = Path("data/images/flowers")
     t0 = perf_counter()
     main(input_directory)
     t1 = perf_counter()

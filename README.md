@@ -48,3 +48,18 @@ python benchmark.py
 ```
 
 
+
+rename file to there sha1 
+
+
+```bash
+
+for d in data/images/Flowers299/*/ ; 
+do     
+    echo $d;
+    # parallel checksum=$(sha1sum README.md | cut -f 1 -d " ") && mv {} data/images/flowers-clean/$checksum.jpg ::: $d*.jpg;
+    parallel checksum=$(sha1sum {} | cut -f 1 -d " ") && echo $checksum.jpg ::: $d*.jpg;
+done
+
+```
+s
